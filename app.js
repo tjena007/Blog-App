@@ -3,6 +3,7 @@ var express = require("express"),
 var mongoose = require("mongoose");
 var methodOverride = require("method-override");
 var bodyParser = require("body-parser");
+var expressSanitizer = require("express-sanitizer");
 
 mongoose.connect('mongodb://localhost:27017/restful_blog_app',
     { useNewUrlParser: true, useUnifiedTopology: true });
@@ -11,6 +12,7 @@ app.set("view engine", "ejs");
 //use of this line??????
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(expressSanitizer());
 app.use(methodOverride("_method"));
 
 var blogSchema = new mongoose.Schema({
@@ -21,23 +23,6 @@ var blogSchema = new mongoose.Schema({
 });
 
 var Blog = mongoose.model("Blog", blogSchema);
-
-// Blog.create({
-//     title: "First Blog",
-//     image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=967&q=80",
-//     body: "Hello mofos",
-//     created: Date.now.
-// },
-//     function (err, blog) {
-//         if (err) {
-//             console.log(err);
-//         }
-//         else {
-//             console.log(blog)
-//         }
-//     }
-// )
-
 
 //RESTful ROUTES
 app.get("/", function (req, res) {
@@ -62,7 +47,7 @@ app.get("/blogs/new", function (req, res) {
     res.render("new");
 })
 
-//NEW ROUTE
+//CREATE ROUTE
 app.post("/blogs", function (req, res) {
     //creaete blog
     Blog.create(req.body.blog, function (err, newBlog) {
@@ -104,6 +89,7 @@ app.get("/blogs/:id/edit", function (req, res) {
 
 //UPDATE ROUTE
 app.put("/blogs/:id", function (req, res) {
+    req.body.blog.body = req.sanitize(req.body.blog.body)
     Blog.findByIdAndUpdate(req.params.id, req.body.blog, function (err, updatedBlog) {
         if (err) {
             console.log(err)
